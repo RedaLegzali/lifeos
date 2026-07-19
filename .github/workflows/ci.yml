@@ -1,4 +1,7 @@
-name: CI / Déploiement
+# Contrôle qualité : lint, tests, build sur chaque push et PR.
+# Le DÉPLOIEMENT est assuré par Cloudflare Workers Builds, connecté
+# directement au dépôt (il build et publie chaque push sur main).
+name: CI
 
 on:
   push:
@@ -34,36 +37,4 @@ jobs:
         with:
           name: dist
           path: dist
-
-  deploy:
-    name: Déploiement Cloudflare Pages
-    needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    steps:
-      - name: Récupérer le build vérifié
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      # Nécessite deux secrets de dépôt (Settings → Secrets → Actions) :
-      #   CLOUDFLARE_API_TOKEN  (jeton avec permission « Cloudflare Pages : Edit »)
-      #   CLOUDFLARE_ACCOUNT_ID (visible dans le tableau de bord Cloudflare)
-      # Et le projet Pages créé une fois :
-      #   npx wrangler pages project create lifeos --production-branch=main
-      - name: Déployer sur Cloudflare Pages
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=lifeos
-
-      - name: Secrets Cloudflare absents
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' }}
-        run: |
-          echo "::warning::Déploiement sauté — ajoute CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID dans les secrets du dépôt."
+          retention-days: 7
