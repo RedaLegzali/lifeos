@@ -1,0 +1,69 @@
+name: CI / Déploiement
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    name: Vérification (lint · tests · build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installation
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build (typecheck + production)
+        run: npm run build
+
+      - name: Publier l'artefact de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  deploy:
+    name: Déploiement Cloudflare Pages
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Récupérer le build vérifié
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      # Nécessite deux secrets de dépôt (Settings → Secrets → Actions) :
+      #   CLOUDFLARE_API_TOKEN  (jeton avec permission « Cloudflare Pages : Edit »)
+      #   CLOUDFLARE_ACCOUNT_ID (visible dans le tableau de bord Cloudflare)
+      # Et le projet Pages créé une fois :
+      #   npx wrangler pages project create lifeos --production-branch=main
+      - name: Déployer sur Cloudflare Pages
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=lifeos
+
+      - name: Secrets Cloudflare absents
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' }}
+        run: |
+          echo "::warning::Déploiement sauté — ajoute CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID dans les secrets du dépôt."
