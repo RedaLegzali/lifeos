@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/*
+ * Design system « Nuit » — v0.1
+ * Toutes les couleurs/typos passent par ces tokens.
+ * Les widgets utilisent une teinte dédiée (--color-week, --color-money, …)
+ * exposée aux composants via la variable locale `--tint`.
+ */
+@theme {
+  --color-bg: #0a0b10;
+  --color-bg-2: #0d0f16;
+
+  --color-ink: #edeff7;
+  --color-ink-2: #9ba0b4;
+  --color-ink-3: #5d6275;
+
+  --color-accent: #8b93ff;
+  --color-danger: #ff6b6e;
+
+  --color-week: #f87b8e;
+  --color-money: #5de3a6;
+  --color-subs: #f5b65c;
+  --color-game: #a78bfa;
+  --color-task: #63b3f6;
+
+  --radius-card: 20px;
+  --radius-inner: 12px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI Variable Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+  body {
+    background:
+      radial-gradient(1200px 600px at 75% -10%, rgb(139 147 255 / 9%), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgb(93 227 166 / 5%), transparent 55%),
+      var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  ::selection {
+    background: rgb(139 147 255 / 35%);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Carte « verre » : le composant central du design system. */
+  .glass-card {
+    --tint: var(--color-accent);
+    background: rgb(255 255 255 / 3.5%);
+    border: 1px solid rgb(255 255 255 / 7.5%);
+    border-radius: var(--radius-card);
+    backdrop-filter: blur(20px);
+    transition:
+      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.22s ease,
+      background 0.22s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-3px);
+    background: rgb(255 255 255 / 6%);
+    border-color: color-mix(in srgb, var(--tint) 35%, rgb(255 255 255 / 7.5%));
+  }
+
+  /* Surface interne (stats, lignes survolables…) */
+  .inner-surface {
+    background: rgb(255 255 255 / 3%);
+    border: 1px solid rgb(255 255 255 / 7.5%);
+    border-radius: var(--radius-inner);
+  }
+
+  /* Largeur des widgets sur la grille (6 colonnes ≥ 768px, 1 en dessous). */
+  .wspan-2,
+  .wspan-3,
+  .wspan-6 {
+    grid-column: span 1 / span 1;
+  }
+  @media (min-width: 768px) {
+    .wspan-2 {
+      grid-column: span 2 / span 2;
+    }
+    .wspan-3 {
+      grid-column: span 3 / span 3;
+    }
+    .wspan-6 {
+      grid-column: span 6 / span 6;
+    }
+  }
+
+  /* Entrée en scène des cartes — via `translate` (et non `transform`)
+     pour ne pas entrer en conflit avec le drag & drop (dnd-kit). */
+  .card-rise {
+    opacity: 0;
+    animation: card-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  .kbd {
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    border: 1px solid rgb(255 255 255 / 7.5%);
+    background: rgb(255 255 255 / 3%);
+    color: var(--color-ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
