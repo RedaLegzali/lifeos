@@ -10,8 +10,11 @@ import type { RawTransaction } from './import/parseSG'
  */
 
 const MERCHANT_RULES: [RegExp, string][] = [
-  [/KWERK/, 'Salaire'],
-  [/COFIDIS/, 'Crédit Cofidis'],
+  // Salaires : libellés génériques employés par les banques françaises.
+  // Le nom de l'employeur n'a rien à faire ici — il sera reconnu par une
+  // règle utilisateur, comme n'importe quel virement récurrent.
+  [/\bSALAIRE\b|\bPAIE\b|\bREMUNERATION\b|VIR\s+SALAIRE/, 'Salaire'],
+  [/COFIDIS|CETELEM|SOFINCO|YOUNITED/, 'Crédit à la consommation'],
   [/UBER ?EATS/, 'Uber Eats'],
   [/UBER ?ONE/, 'Uber One'],
   [/UBER/, 'Uber'],
@@ -68,7 +71,7 @@ const MERCHANT_RULES: [RegExp, string][] = [
 const CATEGORY_RULES: [string, RegExp][] = [
   ['Logement', /^Loyer$|Énergie/],
   ['Livraison de repas', /Uber Eats|Deliveroo|Just Eat|HelloFresh/],
-  ['Crédits en cours', /Crédit Cofidis/],
+  ['Crédits en cours', /Crédit à la consommation/],
   [
     'Abonnements',
     /Netflix|Spotify|Deezer|Disney\+|Canal\+|Apple|Google|ChatGPT|Claude|Amazon Prime|Uber One|Navigo|Orange|Free Mobile|SFR|Bouygues/,

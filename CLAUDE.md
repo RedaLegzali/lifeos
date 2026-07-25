@@ -6,6 +6,7 @@ Application personnelle d'Omar (francophone — toujours répondre en français)
 
 - **Design d'abord, premium, minimaliste.** Dark mode uniquement. Références : Apple, Linear, Arc, Things 3, Raycast. Ne jamais dégrader le design pour aller plus vite.
 - **0 €/mois.** Aucune API payante ni service à abonnement obligatoire. Local-first : IndexedDB (Dexie) pour les données, localStorage pour les préférences. Les intégrations payantes sont facultatives, remplaçables ou reportées.
+- **Jamais de donnée personnelle dans le dépôt.** Il est public. Aucun nom réel (employeur, proches, propriétaire), aucun numéro de compte, aucun relevé, ni dans le code, ni dans les tests, ni dans les fixtures. Les jeux de test utilisent des noms fictifs (Jean Dupont, Marie Martin). Les règles de catégorisation ne contiennent que des marchands publics (Netflix, Cofidis…), jamais un nom lié à l'utilisateur — c'est le rôle des règles utilisateur, stockées localement.
 - **Petites étapes.** Un module à la fois : terminé, testé (`npm test`), validé par Omar avant le suivant. Ne jamais casser l'existant.
 - **Widgets autonomes.** Tout nouveau widget = un dossier `src/widgets/<id>/` + une ligne dans `src/core/widgets/registry.ts`. Ne pas coupler les widgets entre eux ; ils communiquent via leurs contrats (`WidgetManifest` : carte, brief, recherche).
 - **Montants en centimes** (entiers), formatés via `src/lib/format.ts`. Dates via `src/lib/dates.ts` (pas de librairie de dates).

@@ -98,7 +98,7 @@ describe('détection des abonnements', () => {
 
   it('ignore virements, retraits et transferts internes', () => {
     const noise = [
-      ...monthly('Virement · Maria Badre', 10000, ['2026-02', '2026-03', '2026-04']),
+      ...monthly('Virement · Marie Martin', 10000, ['2026-02', '2026-03', '2026-04']),
       ...monthly('Retrait espèces', 5000, ['2026-02', '2026-03', '2026-04']),
       ...monthly('Transfert interne', 20000, ['2026-02', '2026-03', '2026-04']),
     ]

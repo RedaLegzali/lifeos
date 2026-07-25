@@ -19,8 +19,10 @@ describe('normalisation des libellés bancaires', () => {
   })
 
   it('distingue les cas particuliers des cas généraux', () => {
-    // Un crédit Cofidis n'est pas un achat Amazon, et Prime n'est pas Amazon.
-    expect(classify(raw('CARTE X4069 21/04 COFIDIS AMAZON')).merchant).toBe('Crédit Cofidis')
+    // Un crédit à la consommation n'est pas un achat, et Prime n'est pas Amazon.
+    expect(classify(raw('CARTE X4069 21/04 COFIDIS AMAZON')).merchant).toBe(
+      'Crédit à la consommation',
+    )
     expect(classify(raw('CARTE X4069 03/07 AMAZON PRIME FR')).merchant).toBe('Amazon Prime')
     expect(classify(raw('CARTE X4069 12/05 AMZN MKTPLACE')).merchant).toBe('Amazon')
   })
@@ -32,18 +34,18 @@ describe('normalisation des libellés bancaires', () => {
   })
 
   it('exclut les virements que le titulaire se fait à lui-même', () => {
-    const t = raw('VIR EUROPEEN EMIS LOGITEL', 'POUR: M. OMAR BADRE | REF: 96012544')
-    const c = classify(t, 'Omar')
+    const t = raw('VIR EUROPEEN EMIS LOGITEL', 'POUR: M. JEAN DUPONT | REF: 96012544')
+    const c = classify(t, 'Jean')
     expect(c.excluded).toBe(true)
     expect(c.merchant).toBe('Transfert interne')
   })
 
   it('nomme la contrepartie sans amputer son prénom', () => {
-    // Le retrait de la civilité ne doit pas manger le M de « Maria ».
-    const t = raw('VIR INSTANTANE EMIS', 'POUR: Maria Badre | DATE: 12/01/2026')
-    expect(classify(t, 'Omar').merchant).toBe('Virement · Maria Badre')
-    const u = raw('VIR INSTANTANE EMIS', 'POUR: M. MDJIVOCHE BOINA')
-    expect(classify(u, 'Omar').merchant).toBe('Virement · MDJIVOCHE BOINA')
+    // Le retrait de la civilité ne doit pas manger le M de « Marie ».
+    const t = raw('VIR INSTANTANE EMIS', 'POUR: Marie Martin | DATE: 12/01/2026')
+    expect(classify(t, 'Jean').merchant).toBe('Virement · Marie Martin')
+    const u = raw('VIR INSTANTANE EMIS', 'POUR: M. PAUL DURAND')
+    expect(classify(u, 'Jean').merchant).toBe('Virement · PAUL DURAND')
   })
 })
 
@@ -120,8 +122,8 @@ describe('agrégation', () => {
 
   it('applique les règles de l’utilisateur par-dessus la détection', () => {
     const data = buildMoneyData(
-      [tx({ cents: 62200, merchant: 'Virement · BOINA', category: 'Virements à des proches' })],
-      { 'Virement · BOINA': 'Logement' },
+      [tx({ cents: 62200, merchant: 'Virement · DURAND', category: 'Virements à des proches' })],
+      { 'Virement · DURAND': 'Logement' },
     )
     expect(data.categories[0]!.name).toBe('Logement')
   })
