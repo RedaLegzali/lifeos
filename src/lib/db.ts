@@ -57,11 +57,38 @@ export interface Task {
   doneAt?: Date
 }
 
+/**
+ * Une opération bancaire importée depuis un relevé.
+ *
+ * `id` est une clé composite déterministe (date + libellé + montant + sens
+ * + détail) : réimporter deux fois le même relevé ne crée aucun doublon,
+ * et deux opérations réellement identiques le même jour restent distinctes
+ * grâce à la référence bancaire contenue dans le détail.
+ */
+export interface Transaction {
+  id: string
+  /** ISO « AAAA-MM-JJ » — trié et filtré directement comme chaîne. */
+  date: string
+  label: string
+  detail: string
+  /** Toujours positif ; le sens est porté par `kind`. */
+  cents: number
+  kind: 'debit' | 'credit'
+  /** Libellé normalisé (« CARTE X4069 17/06 UBER *EATS » → « Uber Eats »). */
+  merchant: string
+  category: string
+  /** Exclu des statistiques : virements entre ses propres comptes. */
+  excluded: boolean
+  /** Nom du fichier d'origine, pour pouvoir retirer un import. */
+  source: string
+}
+
 export const db = new Dexie('lifeos') as Dexie & {
   kv: EntityTable<KVEntry, 'key'>
   people: EntityTable<Person, 'id'>
   subscriptions: EntityTable<Subscription, 'id'>
   tasks: EntityTable<Task, 'id'>
+  transactions: EntityTable<Transaction, 'id'>
 }
 
 db.version(1).stores({
@@ -81,6 +108,15 @@ db.version(3).stores({
   people: 'id, name',
   subscriptions: 'id, name, billingDay',
   tasks: 'id, createdAt',
+})
+
+// v4 — module Argent : opérations bancaires importées.
+db.version(4).stores({
+  kv: 'key',
+  people: 'id, name',
+  subscriptions: 'id, name, billingDay',
+  tasks: 'id, createdAt',
+  transactions: 'id, date, category, merchant, kind, source',
 })
 
 export async function getKV<T>(key: string, fallback: T): Promise<T> {
