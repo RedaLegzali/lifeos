@@ -12,6 +12,7 @@ import {
   useOwnerName,
   type ImportReport,
 } from './useMoneyData'
+import { useForecast } from './forecast'
 import { moneyWidget } from './manifest'
 
 function StatTile({
@@ -205,13 +206,112 @@ function CategoryRow({
   )
 }
 
+/** Ce qui va sortir du compte dans les 30 prochains jours. */
+function ForecastSection({
+  variableOut,
+  variableIn,
+}: {
+  variableOut: number
+  variableIn: number
+}) {
+  const forecast = useForecast(30)
+  if (forecast.empty) return null
+
+  // Le solde des seuls mouvements réguliers serait flatteur : il ignore
+  // les dépenses variables. Mais ne déduire QUE les dépenses variables
+  // serait alarmiste : les entrées irrégulières (remboursements entre
+  // proches) comptent aussi. On corrige donc les deux côtés.
+  const realistic = forecast.netCents - variableOut + variableIn
+
+  return (
+    <section className="mt-4">
+      <h2 className="mb-1 text-[19px] font-bold tracking-[-0.02em]">
+        Les 30 prochains jours
+      </h2>
+      <p className="mb-4 text-[13.5px] text-ink-3">
+        Projeté depuis ton historique — aucune connexion bancaire, donc à confirmer par
+        tes prochains relevés.
+      </p>
+
+      <div className="mb-3 grid gap-3.5 sm:grid-cols-3">
+        <StatTile
+          label="Sorties régulières"
+          value={formatCents(forecast.debitCents)}
+          hint={`${forecast.payments.filter((p) => p.kind === 'debit').length} prélèvements prévus`}
+        />
+        <StatTile
+          label="Entrées régulières"
+          value={formatCents(forecast.creditCents)}
+          hint="revenus récurrents"
+          tone="good"
+        />
+        <StatTile
+          label="Reste estimé"
+          value={formatCents(realistic)}
+          hint="dépenses variables déduites"
+          tone={realistic >= 0 ? 'warn' : undefined}
+        />
+      </div>
+
+      <p className="mb-3 text-[12.5px] leading-relaxed text-ink-3">
+        Le « reste estimé » ajoute tes moyennes historiques hors régulier :{' '}
+        <b className="font-semibold text-ink-2">−{formatCents(variableOut)}</b> de dépenses
+        variables et <b className="font-semibold text-ink-2">+{formatCents(variableIn)}</b>{' '}
+        d'entrées ponctuelles. Les échéances ci-dessous ne listent que le régulier.
+      </p>
+
+      <div className="glass-card overflow-hidden" style={{ '--tint': moneyWidget.tint } as never}>
+        {forecast.payments.map((p) => (
+          <div
+            key={p.id}
+            className="flex items-center gap-3 border-b border-white/[0.04] px-4 py-2.5 text-[13.5px] last:border-0"
+          >
+            <span className="w-16 flex-none text-[12px] tabular-nums text-ink-3">
+              {p.daysAway === 0
+                ? "auj."
+                : p.daysAway === 1
+                  ? 'demain'
+                  : `dans ${p.daysAway} j`}
+            </span>
+            <span className="truncate font-medium">{p.label}</span>
+            {!p.confident && (
+              <span className="flex-none rounded-full bg-subs/15 px-2 py-0.5 text-[10.5px] font-semibold text-subs">
+                incertain
+              </span>
+            )}
+            <span
+              className={`ml-auto flex-none font-semibold tabular-nums ${
+                p.kind === 'credit' ? 'text-money' : 'text-ink'
+              }`}
+            >
+              {p.kind === 'credit' ? '+' : '−'}
+              {formatCents(p.cents)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function MoneyPage() {
   const data = useMoneyData()
+  const forecast = useForecast(30)
   const [reports, setReports] = useState<ImportReport[]>([])
   const Icon = moneyWidget.icon
 
   const net = data.totalCredits - data.totalDebits
   const max = Math.max(...data.categories.map((c) => c.cents), 1)
+
+  // Variable = moyenne mensuelle observée, moins la part régulière.
+  const variableOut = Math.max(
+    perMonth(data.totalDebits, data.months) - forecast.debitCents,
+    0,
+  )
+  const variableIn = Math.max(
+    perMonth(data.totalCredits, data.months) - forecast.creditCents,
+    0,
+  )
 
   return (
     <motion.div
@@ -286,6 +386,8 @@ export function MoneyPage() {
                 tone={net > 0 ? 'warn' : undefined}
               />
             </div>
+
+            <ForecastSection variableOut={variableOut} variableIn={variableIn} />
 
             <section className="mt-4">
               <h2 className="mb-1 text-[19px] font-bold tracking-[-0.02em]">

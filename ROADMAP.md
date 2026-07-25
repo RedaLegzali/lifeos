@@ -31,10 +31,8 @@ Voir [CLAUDE.md](CLAUDE.md) pour les règles de travail et [README.md](README.md
 - [x] **Abonnements** — bibliothèque de 27 services, édition en ligne
 - [x] **Argent étape 1** — import de relevés PDF SG, catégories, règles utilisateur
 - [x] **Argent étape 2** — détection automatique des abonnements dans les relevés
-
-## En cours
-
-- [ ] **Argent étape 3** — prévision des prélèvements des 30 prochains jours
+- [x] **Argent étape 3** — prévision des 30 prochains jours, alimentant le brief et
+      la carte Semaine via `useCalendarEvents`
 
 ## Ensuite
 
@@ -65,7 +63,7 @@ prévoient déjà cette évolution.
 ```bash
 npm install
 npm run dev      # serveur local (--host pour y accéder depuis le téléphone)
-npm test         # 56 tests
+npm test         # 77 tests
 npm run build    # typecheck + build de production
 npm run lint
 ```

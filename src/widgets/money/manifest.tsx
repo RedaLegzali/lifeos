@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { formatCentsRounded } from '@/lib/format'
 import { buildMoneyData, perMonth } from './useMoneyData'
 import { loadOverrides, useOverrides } from './rules'
+import { useForecast } from './forecast'
 
 const MoneyCard = lazy(async () => ({ default: (await import('./MoneyCard')).MoneyCard }))
 const MoneyPage = lazy(async () => ({ default: (await import('./MoneyPage')).MoneyPage }))
@@ -26,12 +27,47 @@ export const moneyWidget: WidgetManifest = {
   ],
   Card: MoneyCard,
   Page: MoneyPage,
+  // Les prélèvements prévus apparaissent dans le widget Semaine, sans
+  // que celui-ci ait à connaître le module Argent.
+  useCalendarEvents: () => {
+    const forecast = useForecast(14)
+    return forecast.payments
+      .filter((p) => p.kind === 'debit')
+      .map((p) => ({
+        id: `forecast-${p.id}`,
+        // « Virement · Untel » se suffit à lui-même ; les autres libellés
+        // gagnent à être annoncés comme des prélèvements.
+        label: p.label.startsWith('Virement') ? p.label : `Prélèvement ${p.label}`,
+        date: p.date,
+        emoji: '💳',
+        tint: 'var(--color-money)',
+      }))
+  },
   useBriefItems: () => {
     const all = useLiveQuery(() => db.transactions.toArray(), [])
     const overrides = useOverrides()
-    if (!all || all.length === 0) return []
-    const data = buildMoneyData(all, overrides)
+    const forecast = useForecast(7)
     const items: BriefItem[] = []
+
+    // Ce qui va sortir cette semaine : l'information la plus actionnable.
+    if (forecast.debitCents > 0) {
+      const count = forecast.payments.filter((p) => p.kind === 'debit').length
+      items.push({
+        id: 'brief-forecast',
+        emoji: '📅',
+        text: (
+          <>
+            <b>{formatCentsRounded(forecast.debitCents)}</b> de prélèvements attendus cette
+            semaine
+          </>
+        ),
+        when: `${count} à venir`,
+        priority: 3,
+      })
+    }
+
+    if (!all || all.length === 0) return items
+    const data = buildMoneyData(all, overrides)
 
     const top = data.categories[0]
     if (top) {

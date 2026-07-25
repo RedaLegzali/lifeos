@@ -1,4 +1,5 @@
 import type { Subscription, Transaction } from '@/lib/db'
+import { findRecurring } from '@/lib/recurrence'
 import { serviceCatalog } from './catalog'
 
 /**
@@ -45,11 +46,6 @@ export function operationDay(t: Transaction): number {
   return m ? Number(m[1]) : Number(t.date.slice(8, 10))
 }
 
-function stdDev(xs: number[]): number {
-  const mean = xs.reduce((s, x) => s + x, 0) / xs.length
-  return Math.sqrt(xs.reduce((s, x) => s + (x - mean) ** 2, 0) / xs.length)
-}
-
 function matchCatalog(merchant: string): string | undefined {
   const m = merchant.toLowerCase()
   return serviceCatalog.find(
@@ -58,41 +54,29 @@ function matchCatalog(merchant: string): string | undefined {
 }
 
 export function detectSubscriptions(transactions: Transaction[]): DetectedSubscription[] {
-  const groups = new Map<string, Transaction[]>()
-  for (const t of transactions) {
-    if (t.kind !== 'debit' || t.excluded) continue
-    if (NEVER.test(t.merchant)) continue
-    const key = `${t.merchant}|${t.cents}` // montant exactement identique
-    const list = groups.get(key) ?? []
-    list.push(t)
-    groups.set(key, list)
-  }
+  // Un abonnement est une dépense à un COMMERÇANT : les virements à des
+  // personnes et les retraits sont écartés, même s'ils sont réguliers.
+  // Ils restent pris en compte par la prévision de trésorerie.
+  const candidates = transactions.filter(
+    (t) => t.kind === 'debit' && !t.excluded && !NEVER.test(t.merchant),
+  )
 
-  const found: DetectedSubscription[] = []
-  for (const [key, items] of groups) {
-    const months = new Set(items.map((t) => t.date.slice(0, 7)))
-    if (months.size < 3) continue
-    // Environ une fois par mois : écarte les achats répétés.
-    if (items.length > months.size * 1.2) continue
-
-    const days = items.map(operationDay)
-    if (stdDev(days) > 4) continue
-
-    const sorted = [...days].sort((a, b) => a - b)
-    const dates = items.map((t) => t.date).sort()
-    found.push({
-      key,
-      merchant: items[0]!.merchant,
-      cents: items[0]!.cents,
-      months: months.size,
-      day: sorted[Math.floor(sorted.length / 2)]!,
-      lastSeen: dates.at(-1)!,
-      confident: months.size >= 4,
-      catalogId: matchCatalog(items[0]!.merchant),
-    })
-  }
-
-  return found.sort((a, b) => b.cents - a.cents)
+  return findRecurring(candidates, {
+    key: (t) => `${t.merchant}|${t.cents}`, // montant exactement identique
+    date: (t) => t.date,
+    day: operationDay,
+  })
+    .map((g) => ({
+      key: g.key,
+      merchant: g.items[0]!.merchant,
+      cents: g.items[0]!.cents,
+      months: g.months,
+      day: g.day,
+      lastSeen: g.lastDate,
+      confident: g.months >= 4,
+      catalogId: matchCatalog(g.items[0]!.merchant),
+    }))
+    .sort((a, b) => b.cents - a.cents)
 }
 
 /** Convertit une détection confirmée en abonnement enregistrable. */
