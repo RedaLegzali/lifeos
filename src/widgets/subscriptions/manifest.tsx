@@ -5,6 +5,7 @@ import { daysUntil, formatDayMonth } from '@/lib/dates'
 import { formatCents } from '@/lib/format'
 import { lazy } from 'react'
 import { buildData, useSubscriptionsData } from './useSubscriptionsData'
+import { useDetectedSubscriptions } from './useDetected'
 
 const SubscriptionsCard = lazy(async () => ({
   default: (await import('./SubscriptionsCard')).SubscriptionsCard,
@@ -43,8 +44,28 @@ export const subscriptionsWidget: WidgetManifest = {
   },
   useBriefItems: () => {
     const { subs, totalMonthlyCents } = useSubscriptionsData()
-    if (subs.length === 0) return []
+    const { suggestions } = useDetectedSubscriptions()
     const items: BriefItem[] = []
+
+    // Des abonnements attendent d'être confirmés : c'est l'action utile.
+    if (suggestions.length > 0) {
+      items.push({
+        id: 'brief-subs-detected',
+        emoji: '🔍',
+        text: (
+          <>
+            <b>
+              {suggestions.length} abonnement{suggestions.length > 1 ? 's' : ''}
+            </b>{' '}
+            repéré{suggestions.length > 1 ? 's' : ''} dans tes relevés
+          </>
+        ),
+        when: 'à confirmer',
+        priority: 4,
+      })
+    }
+
+    if (subs.length === 0) return items
 
     const dueSoon = subs.find((s) => {
       const d = daysUntil(s.nextBillingAt)
