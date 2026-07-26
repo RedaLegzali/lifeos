@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
   plugins: [
     react(),
@@ -33,6 +35,7 @@ export default defineConfig({
         ],
       },
     }),
+    cloudflare()
   ],
   resolve: {
     alias: {
