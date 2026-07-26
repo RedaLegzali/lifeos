@@ -25,7 +25,7 @@ const SUGGESTIONS: CoachSuggestion[] = [
     title: 'Ajoute tes proches',
     benefit: 'pour ne plus jamais oublier un anniversaire.',
     cta: 'Ajouter (30 s)',
-    route: '/semaine',
+    route: '/calendrier',
   },
   {
     id: 'subscriptions',

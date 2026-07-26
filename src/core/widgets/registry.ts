@@ -1,5 +1,5 @@
 import type { WidgetManifest } from './types'
-import { weekWidget } from '@/widgets/week/manifest'
+import { calendarWidget } from '@/widgets/calendar/manifest'
 import { moneyWidget } from '@/widgets/money/manifest'
 import { subscriptionsWidget } from '@/widgets/subscriptions/manifest'
 import { gamingWidget } from '@/widgets/gaming/manifest'
@@ -12,7 +12,7 @@ import { tasksWidget } from '@/widgets/tasks/manifest'
  * recherche et réglages se mettent à jour automatiquement.
  */
 export const widgets: WidgetManifest[] = [
-  weekWidget,
+  calendarWidget,
   moneyWidget,
   subscriptionsWidget,
   gamingWidget,

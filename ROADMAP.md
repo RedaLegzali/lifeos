@@ -26,7 +26,8 @@ Voir [CLAUDE.md](CLAUDE.md) pour les règles de travail et [README.md](README.md
 - [x] CI GitHub Actions (lint, tests, build) + déploiement Cloudflare
 
 ### Modules
-- [x] **Semaine** — anniversaires réels, ajout rapide par lien de parenté
+- [x] **Calendrier** — vue mois, jours fériés et ponts calculés en local, congés,
+      météo Open-Meteo, anniversaires, échéances agrégées des autres widgets
 - [x] **Tâches** — todo persistée
 - [x] **Abonnements** — bibliothèque de 27 services, édition en ligne
 - [x] **Argent étape 1** — import de relevés PDF SG, catégories, règles utilisateur
@@ -36,8 +37,8 @@ Voir [CLAUDE.md](CLAUDE.md) pour les règles de travail et [README.md](README.md
 
 ## Ensuite
 
-- [ ] **Calendrier** — mois/semaine, jours fériés (calculés en local), ponts, congés,
-      prélèvements prévus, anniversaires, météo (Open-Meteo, gratuit sans clé)
+- [ ] **Calendrier, suite** — saisie d'évènements et de rendez-vous, horaires de
+      travail récurrents, notifications avant échéance
 
 ## Gelé (volontairement)
 
@@ -63,7 +64,7 @@ prévoient déjà cette évolution.
 ```bash
 npm install
 npm run dev      # serveur local (--host pour y accéder depuis le téléphone)
-npm test         # 77 tests
+npm test         # 90 tests
 npm run build    # typecheck + build de production
 npm run lint
 ```

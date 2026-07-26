@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import { db } from '@/lib/db'
 import { useSettings } from '@/core/settings/store'
 import { searchCatalog } from '@/widgets/subscriptions/catalog'
-import { BirthdayQuickAdd } from '@/widgets/week/BirthdayQuickAdd'
+import { BirthdayQuickAdd } from '@/widgets/calendar/BirthdayQuickAdd'
 import { formatCents } from '@/lib/format'
 import {
   draftFromService,

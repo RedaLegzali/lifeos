@@ -11,7 +11,7 @@ import { useBirthdays } from './birthdays'
  * composants chargés paresseusement (WeekCard), jamais par un manifest —
  * sinon cycle d'imports au chargement.
  */
-export function useWeekEvents(): CalendarEvent[] {
+export function useCalendarEvents(): CalendarEvent[] {
   const birthdays = useBirthdays() ?? []
   // Ordre d'appel stable : le registre est figé au build.
   const fromWidgets = widgets.flatMap((w) =>

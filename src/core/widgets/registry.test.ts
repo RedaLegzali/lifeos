@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { widgets } from './registry'
 
 describe('registre des widgets', () => {
-  it('contient au moins les 5 widgets de la V1', () => {
+  it('contient les 5 widgets de la V1', () => {
     const ids = widgets.map((w) => w.id)
     expect(ids).toEqual(
-      expect.arrayContaining(['week', 'money', 'subscriptions', 'gaming', 'tasks']),
+      expect.arrayContaining(['calendar', 'money', 'subscriptions', 'gaming', 'tasks']),
     )
   })
 
